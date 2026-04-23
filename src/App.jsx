@@ -994,11 +994,14 @@ function MyTimesheets() {
 
   useEffect(() => {
     Promise.all([
-      API.getDocs("timesheets", [{ field: "userId", value: profile.id }]),
+      API.queryDocs("timesheets", "createdAt", "DESCENDING"),
       API.queryDocs("projects", "name"),
-    ]).then(([e, p]) => {
-      const sorted = (e || []).sort((a, b) => (b.workDate || "").localeCompare(a.workDate || ""));
-      setEntries(sorted); setProjects(p); setLoading(false);
+    ]).then(([all, p]) => {
+      // Filter in JS — no Firestore composite index needed
+      const mine = (all || [])
+        .filter(e => e.userId === profile.id)
+        .sort((a, b) => (b.workDate || "").localeCompare(a.workDate || ""));
+      setEntries(mine); setProjects(p); setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
